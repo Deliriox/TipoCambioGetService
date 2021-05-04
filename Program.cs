@@ -1,16 +1,11 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Serilog;
 using System;
 using System.IO;
-using System.Timers;
 using System.Threading.Tasks;
-using System.Xml;
 using TipoCambioGetService.Services;
 using TipoCambioGetService.Services.Interfaces;
 using System.Threading;
-using System.Windows.Input;
 
 namespace TipoCambioGetService
 {
@@ -36,20 +31,12 @@ namespace TipoCambioGetService
         static async Task MainAsync(string[] args)
         {
             // Create service collection
-            Log.Information("Creating service collection");
             ServiceCollection serviceCollection = new ServiceCollection();
             ConfigureServices(serviceCollection);
 
-            // Create service provider
-            Log.Information("Building service provider");
-            IServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
-
             // Get connections from appsettings.json
             string banguatConnection = configuration.GetConnectionString("BanguatConnection");
-            string localServiceConnection = configuration.GetConnectionString("LocalServiceConnection");
-
-            TimeSpan startTime = TimeSpan.Zero;
-            TimeSpan periodTime = TimeSpan.FromSeconds(30);            
+            string localServiceConnection = configuration.GetConnectionString("LocalServiceConnection");     
 
             try
             {
@@ -61,8 +48,8 @@ namespace TipoCambioGetService
                 CancellationToken cancellationToken = cancellationTokenSource.Token;
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    var test2 = Console.KeyAvailable;
-                    if (test2)
+                    var key = Console.KeyAvailable;
+                    if (key)
                     {
                         cancellationTokenSource.Cancel();
                         break;
@@ -71,8 +58,6 @@ namespace TipoCambioGetService
                     var test = await localServiceApi.CreateExchangeRate(ouput);
                     await Task.Delay(30000, cancellationToken);                    
                 }
-
-                
 
                 Console.WriteLine("End of the service");
             }
@@ -85,8 +70,6 @@ namespace TipoCambioGetService
 
         private static void ConfigureServices(IServiceCollection serviceCollection)
         {
-            serviceCollection.AddLogging();
-
             // Build configuration
             configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetParent(AppContext.BaseDirectory).FullName)
